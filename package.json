@@ -1,0 +1,7 @@
+{
+  "name": "speedtest-node",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "sh install.sh"
+  }
+}

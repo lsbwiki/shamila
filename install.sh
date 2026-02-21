@@ -1,24 +1,27 @@
 #!/bin/bash
-# 强制实时刷新日志
+
+# 1. 强制声明：把所有输出实时推送到 Flux 日志终端
 export PYTHONUNBUFFERED=1
+exec > >(tee -a /app/install.log) 2>&1
 
-echo "--- [1] 脚本启动成功 ---"
-date
+echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+echo "!!! [CRITICAL] 脚本开始在绝对路径执行 !!!"
+echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
-echo "--- [2] 正在清理旧进程 ---"
-pkill node || true
+# 2. 定位真正的代码目录
+# Flux 会把代码放在 /app/production/current
+REAL_PATH="/app/production/current"
+cd $REAL_PATH || echo "无法进入 $REAL_PATH"
 
-echo "--- [3] 开始下载测速脚本 ---"
-wget -O speedtest.py https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py
+echo ">>> 当前工作目录: $(pwd)"
+echo ">>> 目录下的文件: $(ls)"
 
-echo "--- [4] 准备进行测速，请等待约 60 秒... ---"
-# 这里是关键：我们把结果直接重定向到标准输出
+# 3. 极简测速 (不依赖外部脚本下载，防止下载失败)
+echo ">>> [STEP] 正在尝试下载并运行测速..."
+curl -sL https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py -o speedtest.py
 python3 speedtest.py --single --no-upload
 
-echo "--- [5] 测速任务收尾 ---"
-# 打印一下当前目录，确认文件都在
-ls -lh
+echo ">>> [END] 如果你看到这一行，说明测速跑完了！"
 
-# 防止容器退出
-echo "--- [6] 进入守护模式，日志输出完毕 ---"
+# 4. 强行保活
 tail -f /dev/null

@@ -1,27 +1,42 @@
 #!/bin/sh
 
-# 1. 测速并把结果写入文件
-echo "Speedtesting..." > speed.txt
-curl -sL https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 - --single --no-upload >> speed.txt 2>&1
+# 1. 创建初始文件，防止 Node 读取时报错
+echo "Speedtest task has been submitted. Please refresh this page in 30 seconds..." > speed.txt
+echo "Timestamp: $(date)" >> speed.txt
 
-# 2. 写入一个极其简单的 Node.js 服务器代码 (server.js)
+# 2. 在后台静默执行测速，结果追加到 speed.txt
+(
+  curl -sL https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 - --single --no-upload >> speed.txt 2>&1
+  echo "\n--- Test Completed at $(date) ---" >> speed.txt
+) &
+
+# 3. 动态创建 Node.js 服务器脚本
 cat <<EOF > server.js
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
 const server = http.createServer((req, res) => {
+    // 强制返回文本格式，防止浏览器乱码
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-    // 读取测速结果并显示
-    const data = fs.readFileSync(path.join(__dirname, 'speed.txt'));
-    res.end(data);
+    
+    const filePath = path.join(__dirname, 'speed.txt');
+    
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            res.end("Error reading results: " + err.message);
+            return;
+        }
+        res.end(data);
+    });
 });
 
-// Flux 默认通常监听 8080 或 3000，这里用 8080，如果不行你可以换
-server.listen(3000, () => {
-    console.log('Server running at http://0.0.0.0:3000/');
+// 监听 Flux 核心的 3000 端口
+const PORT = 3000;
+server.listen(PORT, '0.0.0.0', () => {
+    console.log('Server is running on port ' + PORT);
 });
 EOF
 
-# 3. 启动服务器
+# 4. 启动服务器
 node server.js

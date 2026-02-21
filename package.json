@@ -1,4 +1,13 @@
-// ...前面的代码保持不变
-server.listen(3000, '0.0.0.0', () => {
-    console.log('Server running on port 3000');
-});
+{
+  "name": "flux-speedtest",
+  "version": "1.0.0",
+  "description": "Speedtest for Flux Orbit",
+  "main": "server.js",
+  "scripts": {
+    "start": "sh install.sh"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

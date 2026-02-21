@@ -1,10 +1,4 @@
-{
-  "name": "speedtest",
-  "version": "1.0.0",
-  "engines": {
-    "node": ">=10.0.0"
-  },
-  "scripts": {
-    "start": "sh install.sh"
-  }
-}
+// ...前面的代码保持不变
+server.listen(3000, '0.0.0.0', () => {
+    console.log('Server running on port 3000');
+});

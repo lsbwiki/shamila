@@ -1,27 +1,17 @@
-#!/bin/bash
+#!/bin/sh
 
-# 1. 强制声明：把所有输出实时推送到 Flux 日志终端
-export PYTHONUNBUFFERED=1
-exec > >(tee -a /app/install.log) 2>&1
+# 进入代码所在的真实目录
+cd /app/production/current || cd /app
 
-echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-echo "!!! [CRITICAL] 脚本开始在绝对路径执行 !!!"
-echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+# 简单暴力：直接用 python 运行测速命令，不搞复杂的变量
+echo "--- START TEST ---"
 
-# 2. 定位真正的代码目录
-# Flux 会把代码放在 /app/production/current
-REAL_PATH="/app/production/current"
-cd $REAL_PATH || echo "无法进入 $REAL_PATH"
+# 用 curl 直接下载并立即用 python 执行，不保存中间文件
+curl -sL https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 - --single --no-upload
 
-echo ">>> 当前工作目录: $(pwd)"
-echo ">>> 目录下的文件: $(ls)"
+echo "--- END TEST ---"
 
-# 3. 极简测速 (不依赖外部脚本下载，防止下载失败)
-echo ">>> [STEP] 正在尝试下载并运行测速..."
-curl -sL https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py -o speedtest.py
-python3 speedtest.py --single --no-upload
-
-echo ">>> [END] 如果你看到这一行，说明测速跑完了！"
-
-# 4. 强行保活
-tail -f /dev/null
+# 绝对保活，防止 exit status 2
+while true; do
+    sleep 300
+done
